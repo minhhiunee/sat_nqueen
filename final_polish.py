@@ -12,7 +12,7 @@ SOLVE_LIMIT_SEC = 15.0
 def clean_and_interpolate_data():
     df1_path = os.path.join(RESULTS_DIR, "raw_exp1_amo_sym_matrix.csv")
     if not os.path.exists(df1_path):
-        print("Không tìm thấy file exp1. Vui lòng chạy run_experiments.py trước.")
+        print(f"File not found: {df1_path}")
         return None
         
     df1 = pd.read_csv(df1_path)
@@ -28,19 +28,16 @@ def clean_and_interpolate_data():
     return df1
 
 def targeted_rerun_n300_with_persistence():
-    """Khắc phục 5.1, 5.2 và 5.4: Chạy chuẩn 15s, tính Sample Std (ddof=1), Median, IQR và lưu CSV"""
-    print(f"\n[-] Chạy lặp 5 lần Product N=300 (Giới hạn Encode/Solve đều {ENCODE_LIMIT_SEC}s)...")
+    print(f"\nRunning 5 repetitions for Product N=300 (limit={SOLVE_LIMIT_SEC}s)...")
     records = []
     
     for sym in [True, False]:
         sat_times = []
         for i in range(5):
             gc.collect()
-            # MỤC 5.4: Đồng nhất limit 15.0s
             res = solve_nqueens_pysat(n=300, amo_method="product", solver_name="cadical195", 
                                       use_symmetry=sym, encode_limit=ENCODE_LIMIT_SEC, solve_limit=SOLVE_LIMIT_SEC)
             
-            # Ghi nhận record để lưu CSV (MỤC 5.1)
             res.pop("queens", None)
             res.pop("stats", None)
             res["run_index"] = i + 1
@@ -50,30 +47,27 @@ def targeted_rerun_n300_with_persistence():
                 sat_times.append(res['pure_solve_time'])
                 print(f"    Sym {'ON ' if sym else 'OFF'} | Run {i+1}/5 | Solve: {res['pure_solve_time']:.4f}s | SAT")
             else:
-                print(f"    Sym {'ON ' if sym else 'OFF'} | Run {i+1}/5 | FAILED: {res['status']}")
+                print(f"    Sym {'ON ' if sym else 'OFF'} | Run {i+1}/5 | Status: {res['status']}")
         
         if sat_times:
-            # MỤC 5.2: Thống kê chuẩn (Sample StdDev, Median, IQR)
             med = np.median(sat_times)
             iqr = np.percentile(sat_times, 75) - np.percentile(sat_times, 25)
             std_sample = np.std(sat_times, ddof=1) if len(sat_times) > 1 else 0.0
-            print(f"  => [KẾT LUẬN] Sym {'ON ' if sym else 'OFF'} | Thành công: {len(sat_times)}/5 | Median: {med:.4f}s | IQR: {iqr:.4f}s | StdDev (Mẫu): {std_sample:.4f}s\n")
+            print(f"  Summary: Sym {'ON ' if sym else 'OFF'} | Solved: {len(sat_times)}/5 | Median: {med:.4f}s | IQR: {iqr:.4f}s | StdDev: {std_sample:.4f}s\n")
 
-    # Lưu kết quả chạy lặp ra CSV độc lập
     rerun_df = pd.DataFrame(records)
     rerun_csv_path = os.path.join(RESULTS_DIR, "targeted_reruns_product_n300.csv")
     rerun_df.to_csv(rerun_csv_path, index=False)
-    print(f"[-] Đã lưu chi tiết 10 lần chạy lặp vào: {rerun_csv_path}")
+    print(f"Saved rerun data to {rerun_csv_path}")
     
     return rerun_df
 
 def generate_transparent_plots(df1):
-    """Khắc phục 5.3: Minh bạch timeout và nội suy"""
     plt.rcParams.update({"font.size": 11, "figure.autolayout": True})
     markers = {"binomial": "o", "binary": "s", "seqcounter": "^", "commander": "D", "product": "*"}
     colors = {"binomial": "#1f77b4", "binary": "#ff7f0e", "seqcounter": "#2ca02c", "commander": "#d62728", "product": "#9467bd"}
     
-    # 1. Biểu đồ Clauses (Đứt nét cho giá trị lý thuyết)
+    # 1. Clauses
     plt.figure(figsize=(9, 6))
     df_sym = df1[df1["symmetry"] == True].copy()
     for m in markers:
@@ -82,7 +76,7 @@ def generate_transparent_plots(df1):
         
         if not actual.empty:
             plt.plot(actual["n"], actual["clauses"], marker=markers[m], color=colors[m], 
-                     linewidth=2, label=f"{m.capitalize()} (Thực tế)")
+                     linewidth=2, label=f"{m.capitalize()} (Actual)")
             
         timeout_pts = sub[sub["status"] == "ENCODE_TIMEOUT"]
         if m == "binomial" and not timeout_pts.empty:
@@ -92,7 +86,7 @@ def generate_transparent_plots(df1):
                 theo_n = [actual["n"].iloc[-1]] + theo_n
                 theo_c = [actual["clauses"].iloc[-1]] + theo_c
             plt.plot(theo_n, theo_c, marker=markers[m], color=colors[m], linestyle="--", 
-                     markerfacecolor='none', linewidth=2, label=f"{m.capitalize()} (Lý thuyết)")
+                     markerfacecolor='none', linewidth=2, label=f"{m.capitalize()} (Theoretical)")
 
     plt.yscale("log")
     plt.xlabel("Board Size (N)")
@@ -103,7 +97,7 @@ def generate_transparent_plots(df1):
     plt.savefig(os.path.join(RESULTS_DIR, "fig1_clauses_transparent.pdf"))
     plt.close()
 
-    # 2. Biểu đồ Tương tác (MỤC 5.3: KHÔNG vẽ ENCODE_TIMEOUT ở trục solve_time)
+    # 2. AMO x Symmetry
     plt.figure(figsize=(11, 7))
     solve_to_labeled = False
     
@@ -111,12 +105,10 @@ def generate_transparent_plots(df1):
         for sym, ls in [(True, "-"), (False, "--")]:
             sub = df1[(df1["method"] == m) & (df1["symmetry"] == sym)].sort_values("n")
             
-            # CHỈ VẼ CÁC ĐIỂM SAT
             sat_sub = sub[sub["status"] == "SAT"]
             plt.plot(sat_sub["n"], sat_sub["pure_solve_time"], marker=markers[m], color=colors[m], 
                      linestyle=ls, linewidth=2, label=f"{m.capitalize()} (Sym {'ON' if sym else 'OFF'})")
             
-            # CHỈ ĐÁNH DẤU SOLVE_TIMEOUT tại y = 15. (Tuyệt đối không vẽ ENCODE_TIMEOUT lên đây)
             solve_to = sub[sub["status"] == "SOLVE_TIMEOUT"]
             if not solve_to.empty:
                 plt.scatter(solve_to["n"], [SOLVE_LIMIT_SEC]*len(solve_to), marker="x", s=100, color="red", zorder=5,
@@ -133,14 +125,12 @@ def generate_transparent_plots(df1):
     plt.tight_layout()
     plt.savefig(os.path.join(RESULTS_DIR, "fig3_interaction_transparent.pdf"))
     plt.close()
-    print("[-] Đã xuất biểu đồ chuẩn mực cao nhất!")
+    print("Saved plots to results/")
 
 def build_comprehensive_stability_summary(rerun_df):
-    """Khắc phục 5.1 và 5.2: Tổng hợp ổn định chung với Sample Std, Median, IQR"""
     df2_path = os.path.join(RESULTS_DIR, "raw_exp2_solvers_stability.csv")
     summary = []
     
-    # Phân tích dữ liệu Exp2 cũ
     if os.path.exists(df2_path):
         df2 = pd.read_csv(df2_path)
         for (n, config), grp in df2.groupby(["n", "config"]):
@@ -160,7 +150,6 @@ def build_comprehensive_stability_summary(rerun_df):
                 "Sample_StdDev_s": std_solve
             })
             
-    # Phân tích dữ liệu Targeted Rerun mới
     if rerun_df is not None:
         for sym in [True, False]:
             grp = rerun_df[rerun_df["symmetry"] == sym]
@@ -183,7 +172,7 @@ def build_comprehensive_stability_summary(rerun_df):
     stab_df = pd.DataFrame(summary)
     out_path = os.path.join(RESULTS_DIR, "summary_stability_comprehensive.csv")
     stab_df.to_csv(out_path, index=False)
-    print(f"[-] Đã xuất bảng tổng hợp tính ổn định toàn diện vào: {out_path}")
+    print(f"Saved stability summary to {out_path}")
 
 if __name__ == "__main__":
     df1 = clean_and_interpolate_data()
