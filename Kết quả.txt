@@ -1,0 +1,78 @@
+(venv) PS D:\Tài liệu học tập\Năm học 2026 - 2027\Các vấn đề cơ bản trong KHMT\SAT_NQueenSolver> python final_polish.py
+[-] Đã nội suy số mệnh đề/biến lý thuyết cho các điểm ENCODE_TIMEOUT.
+
+[-] Đang chạy lặp (Targeted Reruns) 5 lần cho Product N=300...
+    Sym ON  | Run 1/5 | Solve time: 0.0000s
+    Sym ON  | Run 2/5 | Solve time: 0.0000s
+    Sym ON  | Run 3/5 | Solve time: 0.0000s
+    Sym ON  | Run 4/5 | Solve time: 0.0000s
+    Sym ON  | Run 5/5 | Solve time: 0.0000s
+  => [KẾT LUẬN] N=300 | Sym ON  | Median: 0.0000s | StdDev: 0.0000s
+
+    Sym OFF | Run 1/5 | Solve time: 0.0000s
+    Sym OFF | Run 2/5 | Solve time: 0.0000s
+    Sym OFF | Run 3/5 | Solve time: 0.0000s
+    Sym OFF | Run 4/5 | Solve time: 0.0000s
+    Sym OFF | Run 5/5 | Solve time: 0.0000s
+  => [KẾT LUẬN] N=300 | Sym OFF | Median: 0.0000s | StdDev: 0.0000s
+
+[-] Đã xuất biểu đồ chuẩn hóa vào 'results/'!
+(venv) PS D:\Tài liệu học tập\Năm học 2026 - 2027\Các vấn đề cơ bản trong KHMT\SAT_NQueenSolver> python test_nqueens_core.py
+N-Queens Core Integration Tests
+Python: 3.11.9
+SAT solver: cadical195
+Encode timeout: 5.0s
+Solve timeout: 5.0s
+
+=== TEST 1: AMO ENCODINGS ===
+[PASS] N=1, AMO=binomial: AMO=binomial; SAT solution independently verified
+[PASS] N=1, AMO=binary: AMO=binary; SAT solution independently verified
+[PASS] N=1, AMO=seqcounter: AMO=seqcounter; SAT solution independently verified
+[PASS] N=1, AMO=commander: AMO=commander; SAT solution independently verified
+[PASS] N=1, AMO=product: AMO=product; SAT solution independently verified
+[PASS] N=2, AMO=binomial: AMO=binomial; Correctly returned UNSAT
+[PASS] N=2, AMO=binary: AMO=binary; Correctly returned UNSAT
+[PASS] N=2, AMO=seqcounter: AMO=seqcounter; Correctly returned UNSAT
+[PASS] N=2, AMO=commander: AMO=commander; Correctly returned UNSAT
+[PASS] N=2, AMO=product: AMO=product; Correctly returned UNSAT
+[PASS] N=3, AMO=binomial: AMO=binomial; Correctly returned UNSAT
+[PASS] N=3, AMO=binary: AMO=binary; Correctly returned UNSAT
+[PASS] N=3, AMO=seqcounter: AMO=seqcounter; Correctly returned UNSAT
+[PASS] N=3, AMO=commander: AMO=commander; Correctly returned UNSAT
+[PASS] N=3, AMO=product: AMO=product; Correctly returned UNSAT
+[PASS] N=4, AMO=binomial: AMO=binomial; SAT solution independently verified
+[PASS] N=4, AMO=binary: AMO=binary; SAT solution independently verified
+[PASS] N=4, AMO=seqcounter: AMO=seqcounter; SAT solution independently verified
+[PASS] N=4, AMO=commander: AMO=commander; SAT solution independently verified
+[PASS] N=4, AMO=product: AMO=product; SAT solution independently verified
+[PASS] N=5, AMO=binomial: AMO=binomial; SAT solution independently verified
+[PASS] N=5, AMO=binary: AMO=binary; SAT solution independently verified
+[PASS] N=5, AMO=seqcounter: AMO=seqcounter; SAT solution independently verified
+[PASS] N=5, AMO=commander: AMO=commander; SAT solution independently verified
+[PASS] N=5, AMO=product: AMO=product; SAT solution independently verified
+[PASS] N=8, AMO=binomial: AMO=binomial; SAT solution independently verified
+[PASS] N=8, AMO=binary: AMO=binary; SAT solution independently verified
+[PASS] N=8, AMO=seqcounter: AMO=seqcounter; SAT solution independently verified
+[PASS] N=8, AMO=commander: AMO=commander; SAT solution independently verified
+[PASS] N=8, AMO=product: AMO=product; SAT solution independently verified
+AMO results: 30/30 passed
+
+=== TEST 2: SYMMETRY ON/OFF ===
+[PASS] N=4, Symmetry=ON: SAT solution independently verified
+[PASS] N=4, Symmetry=OFF: SAT solution independently verified
+[PASS] N=8, Symmetry=ON: SAT solution independently verified
+[PASS] N=8, Symmetry=OFF: SAT solution independently verified
+Symmetry results: 4/4 passed
+
+=== TEST 3: CP-SAT ===
+[PASS] CP-SAT, N=1: SAT solution independently verified
+[PASS] CP-SAT, N=2: Correctly returned UNSAT
+[PASS] CP-SAT, N=3: Correctly returned UNSAT
+[PASS] CP-SAT, N=4: SAT solution independently verified
+[PASS] CP-SAT, N=5: SAT solution independently verified
+[PASS] CP-SAT, N=8: SAT solution independently verified
+CP-SAT results: 6/6 passed
+
+=== FINAL SUMMARY ===
+Passed: 40/40
+Failed: 0/40
